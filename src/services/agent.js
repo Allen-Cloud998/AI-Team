@@ -1,18 +1,29 @@
-const ZAI = require('z-ai-web-dev-sdk').default;
 const {
   getTeamById, getRoleById, getTeamRoles,
   createMessage, createSubTask, updateSubTaskResult,
   updateTaskStatus, updateTaskResult, getMessagesByTaskId
 } = require('../models');
+const { getConfig } = require('../config');
 
 let zaiInstance = null;
 
 // 默认使用的模型（智谱 AI 免费模型）
 const DEFAULT_MODEL = 'glm-4-flash';
 
+/**
+ * 创建 ZAI 实例，使用环境变量配置
+ */
 async function getZAI() {
   if (!zaiInstance) {
-    zaiInstance = await ZAI.create();
+    // 加载配置（优先环境变量）
+    const config = getConfig();
+    
+    // 动态导入 ZAI 类并手动创建实例
+    const ZAIModule = await import('z-ai-web-dev-sdk');
+    const ZAI = ZAIModule.default;
+    
+    // 直接使用配置创建实例，绕过配置文件检查
+    zaiInstance = new ZAI(config);
   }
   return zaiInstance;
 }
