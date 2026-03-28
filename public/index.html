@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 员工群组系统</title>
+<style>
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-card: #1e293b;
+    --bg-hover: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #334155;
+    --border-light: #475569;
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --accent-green: #22c55e;
+    --accent-red: #ef4444;
+    --accent-yellow: #eab308;
+    --accent-purple: #a855f7;
+    --accent-cyan: #06b6d4;
+    --accent-pink: #ec4899;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+  /* Layout */
+  .app { display: flex; height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar-header h1 span {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-nav {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .nav-section {
+    margin-bottom: 8px;
+  }
+
+  .nav-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 12px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .nav-item.active { background: var(--accent-blue); color: white; }
+  .nav-item .badge {
+    margin-left: auto;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .nav-item.active .badge { background: rgba(255,255,255,0.2); color: white; }
+
+  /* Main Content */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .main-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+  }
+
+  .main-header h2 { font-size: 18px; font-weight: 600; }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* Page transitions */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--border-light); }
+  .btn-primary { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+  .btn-primary:hover { background: var(--accent-blue-hover); }
+  .btn-danger { background: var(--accent-red); border-color: var(--accent-red); color: white; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; border-color: transparent; }
+  .btn-ghost:hover { background: var(--bg-hover); }
+
+  /* Form */
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+  }
+
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+
+  /* Tags */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+
+  .tag-remove {
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 14px;
+  }
+  .tag-remove:hover { opacity: 1; color: var(--accent-red); }
+
+  /* Grid */
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+  /* Role Card */
+  .role-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .role-card:hover { border-color: var(--border-light); transform: translateY(-1px); }
+  .role-card.selected { border-color: var(--accent-blue); box-shadow: 0 0 0 1px var(--accent-blue); }
+
+  .role-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .role-card-emoji { font-size: 28px; }
+  .role-card-name { font-size: 15px; font-weight: 600; }
+  .role-card-template { font-size: 11px; color: var(--text-muted); }
+
+  .role-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .role-card-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+
+  /* Team Card */
+  .team-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .team-card:hover { border-color: var(--border-light); }
+
+  .team-card-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .team-card-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+
+  .team-card-roles {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .team-role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+  }
+
+  /* Task Card */
+  .task-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .task-card:hover { border-color: var(--border-light); }
+
+  .task-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .task-card-input {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .task-card-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .task-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-delete {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0.6;
+    transition: all 0.15s;
+  }
+
+  .btn-delete:hover {
+    opacity: 1;
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.1);
+  }
+
+  /* Status badges */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .status-pending { background: rgba(234,179,8,0.15); color: var(--accent-yellow); }
+  .status-discussing { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .status-summarizing { background: rgba(168,85,247,0.15); color: var(--accent-purple); }
+  .status-executing { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+  .status-reviewing { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+  .status-completed { background: rgba(34,197,94,0.15); color: var(--accent-green); }
+  .status-failed { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+  /* Chat / Discussion */
+  .discussion-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+  }
+
+  .discussion-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 0;
+  }
+
+  .message {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .message-body { flex: 1; min-width: 0; }
+
+  .message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .message-name { font-size: 14px; font-weight: 600; }
+  .message-type {
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+  }
+  .message-type.proposal { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .message-type.review { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+
+  .message-content {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .message-content p { margin-bottom: 8px; }
+
+  .message-round {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* System message */
+  .system-message {
+    text-align: center;
+    padding: 12px;
+    margin: 16px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border);
+  }
+
+  /* Sub-task */
+  .subtask {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .subtask-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .subtask-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+
+  .subtask-result {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    padding: 10px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+  }
+
+  /* Task input area */
+  .task-input-area {
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .task-input-box {
+    display: flex;
+    gap: 10px;
+  }
+
+  .task-input-box textarea {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    min-height: 48px;
+    max-height: 120px;
+  }
+
+  .task-input-box textarea:focus { outline: none; border-color: var(--accent-blue); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.15s ease;
+  }
+
+  .modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .modal-title { font-size: 18px; font-weight: 600; }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .modal-close:hover { background: var(--border-light); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state-text { font-size: 14px; margin-bottom: 20px; }
+
+  /* Loading */
+  .loading-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .loading-dots span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    animation: bounce 1.4s infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .form-row { flex-direction: column; gap: 0; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* Emoji picker simple */
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .emoji-option {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.1s;
+  }
+  .emoji-option:hover { background: var(--bg-hover); border-color: var(--accent-blue); }
+  .emoji-option.selected { background: var(--accent-blue); border-color: var(--accent-blue); }
+
+  /* Team selector in task page */
+  .team-selector {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 12px 0;
+  }
+
+  .team-option {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    min-width: 120px;
+  }
+  .team-option:hover { border-color: var(--border-light); }
+  .team-option.selected { border-color: var(--accent-blue); background: rgba(59,130,246,0.1); }
+  .team-option-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .team-option-count { font-size: 11px; color: var(--text-muted); }
+
+  /* Pulse animation for active task */
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  /* Markdown-like formatting in messages */
+  .message-content h1, .message-content h2, .message-content h3 {
+    color: var(--text-primary);
+    margin: 12px 0 8px;
+  }
+  .message-content h1 { font-size: 16px; }
+  .message-content h2 { font-size: 15px; }
+  .message-content h3 { font-size: 14px; }
+  .message-content ul, .message-content ol {
+    padding-left: 20px;
+    margin: 8px 0;
+  }
+  .message-content li { margin: 4px 0; }
+  .message-content code {
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .message-content strong { color: var(--text-primary); }
+  .message-content blockquote {
+    border-left: 3px solid var(--accent-blue);
+    padding-left: 12px;
+    margin: 8px 0;
+    color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>🤖 <span>AI 员工群组</span></h1>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">工作台</div>
+        <div class="nav-item active" data-page="tasks" onclick="navigateTo('tasks')">
+          📋 任务中心
+          <span class="badge" id="task-count">0</span>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">管理</div>
+        <div class="nav-item" data-page="roles" onclick="navigateTo('roles')">
+          🎭 角色管理
+          <span class="badge" id="role-count">0</span>
+        </div>
+        <div class="nav-item" data-page="teams" onclick="navigateTo('teams')">
+          👥 团队管理
+          <span class="badge" id="team-count">0</span>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <header class="main-header">
+      <h2 id="page-title">📋 任务中心</h2>
+      <div id="header-actions"></div>
+    </header>
+
+    <div class="main-content">
+      <!-- Tasks Page -->
+      <div class="page active" id="page-tasks">
+        <div id="tasks-list"></div>
+        <div id="task-detail" style="display:none;"></div>
+      </div>
+
+      <!-- Roles Page -->
+      <div class="page" id="page-roles">
+        <div id="roles-content"></div>
+      </div>
+
+      <!-- Teams Page -->
+      <div class="page" id="page-teams">
+        <div id="teams-content"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Container -->
+<div id="modal-container"></div>
+
+<script>
+// ==================== State ====================
+const state = {
+  currentPage: 'tasks',
+  currentTaskId: null,
+  roles: [],
+  teams: [],
+  tasks: [],
+  ws: null,
+  selectedTeamId: null
+};
+
+// ==================== API ====================
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`/api${path}`, opts);
+  return res.json();
+}
+
+// ==================== Navigation ====================
+function navigateTo(page, data) {
+  state.currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+
+  const titles = { tasks: '📋 任务中心', roles: '🎭 角色管理', teams: '👥 团队管理' };
+  document.getElementById('page-title').textContent = titles[page] || '';
+
+  if (page === 'tasks') loadTasks();
+  if (page === 'roles') loadRoles();
+  if (page === 'teams') loadTeams();
+}
+
+// ==================== WebSocket ====================
+function connectWS() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  state.ws = new WebSocket(`${protocol}//${location.host}`);
+
+  state.ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    handleWSEvent(data);
+  };
+
+  state.ws.onclose = () => {
+    setTimeout(connectWS, 3000);
+  };
+}
+
+function handleWSEvent(data) {
+  if (data.taskId !== state.currentTaskId) return;
+
+  switch (data.type) {
+    case 'status':
+      updateTaskStatus(data.taskId, data.status);
+      break;
+    case 'message':
+      appendMessage(data.message);
+      break;
+    case 'info':
+      appendSystemMessage(data.message);
+      break;
+    case 'subtask_start':
+      appendSubTaskStart(data);
+      break;
+    case 'subtask_complete':
+      updateSubTaskResult(data);
+      break;
+    case 'completed':
+      onTaskCompleted(data);
+      break;
+    case 'error':
+      appendSystemMessage(`❌ 错误：${data.message}`);
+      break;
+  }
+}
+
+// ==================== Tasks ====================
+async function loadTasks() {
+  const res = await api('GET', '/tasks');
+  state.tasks = res.data || [];
+  document.getElementById('task-count').textContent = state.tasks.length;
+
+  if (state.currentTaskId) {
+    showTaskDetail(state.currentTaskId);
+  } else {
+    renderTasksList();
+  }
+}
+
+function renderTasksList() {
+  const container = document.getElementById('tasks-list');
+  document.getElementById('task-detail').style.display = 'none';
+  container.style.display = 'block';
+
+  document.getElementById('header-actions').innerHTML = `
+    <button class="btn btn-primary" onclick="showNewTaskModal()">+ 新建任务</button>
+  `;
+
+  if (state.tasks.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">还没有任务，创建一个试试吧</div>
+        <button class="btn btn-primary" onclick="showNewTaskModal()">+ 新建任务</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = state.tasks.map(task => {
+    const team = state.teams.find(t => t.id === task.team_id);
+    const statusLabels = {
+      pending: '等待中', discussing: '讨论中', summarizing: '汇总中',
+      executing: '执行中', reviewing: '审查中', completed: '已完成', failed: '失败'
+    };
+    return `
+      <div class="task-card" onclick="showTaskDetail('${task.id}')">
+        <div class="task-card-header">
+          <span class="status status-${task.status}">${statusLabels[task.status] || task.status}</span>
+          <div class="task-card-actions">
+            <span style="font-size:12px;color:var(--text-muted)">${formatTime(task.created_at)}</span>
+            <button class="btn-delete" onclick="event.stopPropagation(); deleteTask('${task.id}')" title="删除任务">🗑️</button>
+          </div>
+        </div>
+        <div class="task-card-input">${escapeHtml(task.user_input)}</div>
+        <div class="task-card-meta">
+          <span>👥 ${team ? team.name : '未知团队'}</span>
+          ${task.total_tokens ? `<span>🔤 ${task.total_tokens} tokens</span>` : ''}
+          ${task.total_duration_ms ? `<span>⏱️ ${(task.total_duration_ms / 1000).toFixed(1)}s</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 删除任务
+async function deleteTask(taskId) {
+  if (!confirm('确定要删除这个任务吗？此操作不可恢复。')) {
+    return;
+  }
+  
+  try {
+    const res = await api('DELETE', `/tasks/${taskId}`);
+    if (res.success) {
+      showToast('任务已删除', 'success');
+      await loadTasks();
+      renderTasksList();
+    } else {
+      showToast(res.error || '删除失败', 'error');
+    }
+  } catch (err) {
+    showToast('删除失败: ' + err.message, 'error');
+  }
+}
+
+async function showTaskDetail(taskId) {
+  state.currentTaskId = taskId;
+  document.getElementById('tasks-list').style.display = 'none';
+  const detail = document.getElementById('task-detail');
+  detail.style.display = 'block';
+
+  document.getElementById('header-actions').innerHTML = `
+    <button class="btn btn-ghost" onclick="backToTasks()">← 返回列表</button>
+  `;
+
+  const res = await api('GET', `/tasks/${taskId}`);
+  const task = res.data;
+
+  // Subscribe to WebSocket updates
+  if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+    state.ws.send(JSON.stringify({ type: 'subscribe_task', taskId }));
+  }
+
+  const team = state.teams.find(t => t.id === task.team_id);
+  const statusLabels = {
+    pending: '等待中', discussing: '讨论中', summarizing: '汇总中',
+    executing: '执行中', reviewing: '审查中', completed: '已完成', failed: '失败'
+  };
+
+  detail.innerHTML = `
+    <div class="discussion-container">
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span class="status status-${task.status}" id="task-status-badge">
+            ${task.status === 'discussing' || task.status === 'executing' || task.status === 'summarizing' || task.status === 'reviewing' ? '<span class="pulse">●</span>' : ''}
+            ${statusLabels[task.status]}
+          </span>
+          <span style="font-size:13px;color:var(--text-muted)">👥 ${team ? team.name : '未知团队'}</span>
+          ${task.total_tokens ? `<span style="font-size:13px;color:var(--text-muted)">🔤 ${task.total_tokens} tokens</span>` : ''}
+          ${task.total_duration_ms ? `<span style="font-size:13px;color:var(--text-muted)">⏱️ ${(task.total_duration_ms / 1000).toFixed(1)}s</span>` : ''}
+        </div>
+        <div style="font-size:15px;font-weight:500;padding:12px 16px;background:var(--bg-secondary);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          ${escapeHtml(task.user_input)}
+        </div>
+      </div>
+
+      <div class="discussion-messages" id="discussion-messages">
+        ${renderMessages(task.messages || [])}
+        ${renderSubTasks(task.subTasks || [])}
+      </div>
+
+      ${task.status === 'pending' ? `
+        <div class="task-input-area">
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="startTask('${task.id}', '${task.team_id}', '${escapeAttr(task.user_input)}')">
+            🚀 开始执行任务
+          </button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  // Scroll to bottom
+  const msgs = document.getElementById('discussion-messages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function renderMessages(messages) {
+  if (!messages || messages.length === 0) return '';
+
+  return messages.map(msg => `
+    <div class="message">
+      <div class="message-avatar">${msg.role_emoji}</div>
+      <div class="message-body">
+        <div class="message-header">
+          <span class="message-name">${escapeHtml(msg.role_name)}</span>
+          <span class="message-type ${msg.type}">${getMsgTypeLabel(msg.type)}</span>
+        </div>
+        <div class="message-content">${formatContent(msg.content)}</div>
+        <div class="message-round">第 ${msg.round} 轮 · ${formatTime(msg.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSubTasks(subTasks) {
+  if (!subTasks || subTasks.length === 0) return '';
+
+  let html = '<div class="system-message">📦 子任务分配</div>';
+  html += subTasks.map(st => `
+    <div class="subtask" id="subtask-${st.id}">
+      <div class="subtask-header">
+        <span class="status status-${st.status === 'completed' ? 'completed' : st.status === 'executing' ? 'executing' : 'pending'}">
+          ${st.status === 'completed' ? '✅' : st.status === 'executing' ? '⏳' : '⏸️'}
+          ${st.status === 'completed' ? '已完成' : st.status === 'executing' ? '执行中' : '等待中'}
+        </span>
+        <span style="font-size:13px;font-weight:500;">${escapeHtml(st.role_name)}</span>
+      </div>
+      <div class="subtask-desc">${escapeHtml(st.description)}</div>
+      ${st.result ? `<div class="subtask-result">${formatContent(st.result)}</div>` : ''}
+    </div>
+  `).join('');
+  return html;
+}
+
+function appendMessage(msg) {
+  const container = document.getElementById('discussion-messages');
+  if (!container) return;
+
+  const div = document.createElement('div');
+  div.className = 'message';
+  div.innerHTML = `
+    <div class="message-avatar">${msg.role_emoji}</div>
+    <div class="message-body">
+      <div class="message-header">
+        <span class="message-name">${escapeHtml(msg.role_name)}</span>
+        <span class="message-type ${msg.type}">${getMsgTypeLabel(msg.type)}</span>
+      </div>
+      <div class="message-content">${formatContent(msg.content)}</div>
+      <div class="message-round">第 ${msg.round} 轮</div>
+    </div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendSystemMessage(text) {
+  const container = document.getElementById('discussion-messages');
+  if (!container) return;
+
+  const div = document.createElement('div');
+  div.className = 'system-message';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendSubTaskStart(data) {
+  const container = document.getElementById('discussion-messages');
+  if (!container) return;
+
+  // Check if subtask section already exists
+  if (!document.getElementById(`subtask-${data.subTaskId}`)) {
+    const div = document.createElement('div');
+    div.className = 'subtask';
+    div.id = `subtask-${data.subTaskId}`;
+    div.innerHTML = `
+      <div class="subtask-header">
+        <span class="status status-executing"><span class="pulse">●</span> 执行中</span>
+        <span style="font-size:13px;font-weight:500;">${escapeHtml(data.role_name)}</span>
+      </div>
+      <div class="subtask-desc">${escapeHtml(data.description)}</div>
+      <div class="loading-dots" style="padding:8px 0;"><span></span><span></span><span></span></div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+function updateSubTaskResult(data) {
+  const el = document.getElementById(`subtask-${data.subTaskId}`);
+  if (!el) return;
+  el.innerHTML = `
+    <div class="subtask-header">
+      <span class="status status-completed">✅ 已完成</span>
+      <span style="font-size:13px;font-weight:500;">${escapeHtml(data.role_name)}</span>
+    </div>
+    <div class="subtask-result">${formatContent(data.result)}</div>
+  `;
+}
+
+function updateTaskStatus(taskId, status) {
+  const badge = document.getElementById('task-status-badge');
+  if (!badge) return;
+  const statusLabels = {
+    pending: '等待中', discussing: '讨论中', summarizing: '汇总中',
+    executing: '执行中', reviewing: '审查中', completed: '已完成', failed: '失败'
+  };
+  const isActive = ['discussing', 'executing', 'summarizing', 'reviewing'].includes(status);
+  badge.className = `status status-${status}`;
+  badge.innerHTML = `${isActive ? '<span class="pulse">●</span>' : ''}${statusLabels[status]}`;
+}
+
+function onTaskCompleted(data) {
+  appendSystemMessage(`✅ 任务完成！共消耗 ${data.totalTokens} tokens，耗时 ${(data.totalDuration / 1000).toFixed(1)}s`);
+  updateTaskStatus(data.taskId, 'completed');
+}
+
+function startTask(taskId, teamId, userInput) {
+  if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+    state.ws.send(JSON.stringify({
+      type: 'start_task',
+      taskId,
+      teamId,
+      userInput
+    }));
+  }
+}
+
+function backToTasks() {
+  state.currentTaskId = null;
+  renderTasksList();
+}
+
+// ==================== New Task Modal ====================
+async function showNewTaskModal() {
+  // Load teams for selection
+  const teamsRes = await api('GET', '/teams');
+  const teams = teamsRes.data || [];
+
+  if (teams.length === 0) {
+    alert('请先创建一个团队');
+    navigateTo('teams');
+    return;
+  }
+
+  const modal = document.getElementById('modal-container');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">🚀 新建任务</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">选择团队</label>
+          <div class="team-selector" id="modal-team-selector">
+            ${teams.map(t => `
+              <div class="team-option" data-id="${t.id}" onclick="selectModalTeam('${t.id}')">
+                <div class="team-option-name">${escapeHtml(t.name)}</div>
+                <div class="team-option-count">${t.roles ? t.roles.length : 0} 个角色</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">任务描述</label>
+          <textarea class="form-textarea" id="modal-task-input" rows="4" placeholder="描述你要 AI 团队完成的任务..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" onclick="createTask()">创建并执行</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Auto-select first team
+  if (teams.length > 0) {
+    selectModalTeam(teams[0].id);
+  }
+}
+
+function selectModalTeam(teamId) {
+  state.selectedTeamId = teamId;
+  document.querySelectorAll('#modal-team-selector .team-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === teamId);
+  });
+}
+
+async function createTask() {
+  const userInput = document.getElementById('modal-task-input').value.trim();
+  if (!userInput) return alert('请输入任务描述');
+  if (!state.selectedTeamId) return alert('请选择团队');
+
+  const res = await api('POST', '/tasks', {
+    user_input: userInput,
+    team_id: state.selectedTeamId
+  });
+
+  if (res.success) {
+    closeModal();
+    await loadTasks();
+    showTaskDetail(res.data.id);
+  }
+}
+
+// ==================== Roles ====================
+async function loadRoles() {
+  const res = await api('GET', '/roles');
+  state.roles = res.data || [];
+  document.getElementById('role-count').textContent = state.roles.length;
+  renderRoles();
+}
+
+function renderRoles() {
+  const container = document.getElementById('roles-content');
+  document.getElementById('header-actions').innerHTML = `
+    <button class="btn btn-primary" onclick="showRoleModal()">+ 新建角色</button>
+  `;
+
+  const templates = state.roles.filter(r => r.is_template);
+  const customs = state.roles.filter(r => !r.is_template);
+
+  let html = '';
+
+  if (templates.length > 0) {
+    html += `<div class="card"><div class="card-header"><div class="card-title">📦 角色模板库</div></div>
+    <div class="grid grid-3">${templates.map(r => renderRoleCard(r, true)).join('')}</div></div>`;
+  }
+
+  if (customs.length > 0) {
+    html += `<div class="card"><div class="card-header"><div class="card-title">🎭 自定义角色</div></div>
+    <div class="grid grid-3">${customs.map(r => renderRoleCard(r, false)).join('')}</div></div>`;
+  }
+
+  if (state.roles.length === 0) {
+    html = `<div class="empty-state"><div class="empty-state-icon">🎭</div><div class="empty-state-text">还没有角色</div></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function renderRoleCard(role, isTemplate) {
+  const responsibilities = JSON.parse(role.responsibilities || '[]');
+  return `
+    <div class="role-card" onclick="showRoleDetail('${role.id}')">
+      <div class="role-card-header">
+        <div class="role-card-emoji">${role.emoji}</div>
+        <div>
+          <div class="role-card-name">${escapeHtml(role.name)}</div>
+          <div class="role-card-template">${isTemplate ? '模板' : '自定义'}</div>
+        </div>
+      </div>
+      <div class="role-card-desc">${escapeHtml(role.identity)}</div>
+      <div class="role-card-tags">
+        ${responsibilities.slice(0, 3).map(r => `<span class="tag">${escapeHtml(r.slice(0, 12))}${r.length > 12 ? '...' : ''}</span>`).join('')}
+        ${responsibilities.length > 3 ? `<span class="tag">+${responsibilities.length - 3}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function showRoleDetail(roleId) {
+  const role = state.roles.find(r => r.id === roleId);
+  if (!role) return;
+
+  const responsibilities = JSON.parse(role.responsibilities || '[]');
+  const personality = JSON.parse(role.personality || '{}');
+  const constraints = JSON.parse(role.constraints || '[]');
+
+  const modal = document.getElementById('modal-container');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">${role.emoji} ${escapeHtml(role.name)}</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">身份设定</label>
+          <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;padding:10px;background:var(--bg-primary);border-radius:var(--radius-sm);">
+            ${escapeHtml(role.identity)}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">职责</label>
+          <ul style="padding-left:20px;font-size:14px;color:var(--text-secondary);">
+            ${responsibilities.map(r => `<li style="margin:4px 0;">${escapeHtml(r)}</li>`).join('')}
+          </ul>
+        </div>
+
+        ${personality.tone || personality.style ? `
+        <div class="form-group">
+          <label class="form-label">性格特征</label>
+          <div style="font-size:13px;color:var(--text-secondary);">
+            ${personality.tone ? `<div>语气：${escapeHtml(personality.tone)}</div>` : ''}
+            ${personality.style ? `<div>风格：${escapeHtml(personality.style)}</div>` : ''}
+            ${personality.catchphrases?.length ? `<div>口头禅：${personality.catchphrases.map(c => escapeHtml(c)).join('、')}</div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        ${constraints.length > 0 ? `
+        <div class="form-group">
+          <label class="form-label">约束</label>
+          <ul style="padding-left:20px;font-size:13px;color:var(--text-muted);">
+            ${constraints.map(c => `<li style="margin:4px 0;">${escapeHtml(c)}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+
+        <div class="modal-actions">
+          ${!role.is_template ? `
+            <button class="btn btn-danger" onclick="deleteRole('${role.id}')">删除</button>
+            <button class="btn" onclick="closeModal();showRoleModal('${role.id}')">编辑</button>
+          ` : `
+            <button class="btn" onclick="closeModal();showRoleModal(null, '${role.id}')">基于模板创建</button>
+          `}
+          <button class="btn" onclick="closeModal()">关闭</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function showRoleModal(editId = null, fromTemplateId = null) {
+  let role = null;
+  if (editId) {
+    role = state.roles.find(r => r.id === editId);
+  } else if (fromTemplateId) {
+    const template = state.roles.find(r => r.id === fromTemplateId);
+    if (template) {
+      role = { ...template, id: null, name: template.name + ' (副本)', is_template: false };
+    }
+  }
+
+  const emojis = ['🤖','👨‍💼','👩‍💻','👨‍🔧','👩‍🔬','👨‍🎨','👩‍🏫','👨‍⚕️','👩‍⚖️','👨‍🚀','🧙‍♂️','🦊','🐱','🦁','🐼','🦄','🎯','💡','🔧','📊','🔍','🛡️','🎨','📋','⚙️','📝','💬','🎮','🧪','🌟'];
+
+  const responsibilities = role ? JSON.parse(role.responsibilities || '[]') : [];
+  const personality = role ? JSON.parse(role.personality || '{}') : {};
+  const constraints = role ? JSON.parse(role.constraints || '[]') : [];
+
+  const modal = document.getElementById('modal-container');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal" style="max-width:680px;">
+        <div class="modal-header">
+          <div class="modal-title">${editId ? '✏️ 编辑角色' : '🎭 新建角色'}</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">角色名称</label>
+            <input class="form-input" id="role-name" value="${role ? escapeAttr(role.name) : ''}" placeholder="如：产品经理">
+          </div>
+          <div class="form-group">
+            <label class="form-label">图标</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span id="selected-emoji" style="font-size:28px;">${role ? role.emoji : '🤖'}</span>
+              <input type="hidden" id="role-emoji" value="${role ? role.emoji : '🤖'}">
+              <button class="btn btn-sm" onclick="document.getElementById('emoji-picker').style.display='grid'">选择</button>
+            </div>
+            <div class="emoji-grid" id="emoji-picker" style="display:none;">
+              ${emojis.map(e => `<div class="emoji-option ${role?.emoji === e ? 'selected' : ''}" onclick="pickEmoji('${e}')">${e}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">身份设定</label>
+          <textarea class="form-textarea" id="role-identity" rows="3" placeholder="描述这个角色是谁，擅长什么...">${role ? escapeHtml(role.identity) : ''}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">职责 <span style="color:var(--text-muted);font-weight:normal;">（每行一条）</span></label>
+          <textarea class="form-textarea" id="role-responsibilities" rows="4" placeholder="每行写一条职责...">${responsibilities.join('\n')}</textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">说话语气</label>
+            <input class="form-input" id="role-tone" value="${escapeAttr(personality.tone || '')}" placeholder="如：严谨、幽默">
+          </div>
+          <div class="form-group">
+            <label class="form-label">说话风格</label>
+            <input class="form-input" id="role-style" value="${escapeAttr(personality.style || '')}" placeholder="如：喜欢用数据说话">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">口头禅 <span style="color:var(--text-muted);font-weight:normal;">（逗号分隔）</span></label>
+          <input class="form-input" id="role-catchphrases" value="${(personality.catchphrases || []).join('、')}" placeholder="如：让我们看看数据怎么说">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">约束 <span style="color:var(--text-muted);font-weight:normal;">（每行一条）</span></label>
+          <textarea class="form-textarea" id="role-constraints" rows="3" placeholder="每行写一条约束...">${constraints.join('\n')}</textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" onclick="saveRole('${editId || ''}')">${editId ? '保存' : '创建'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function pickEmoji(emoji) {
+  document.getElementById('selected-emoji').textContent = emoji;
+  document.getElementById('role-emoji').value = emoji;
+  document.querySelectorAll('.emoji-option').forEach(el => el.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('emoji-picker').style.display = 'none';
+}
+
+async function saveRole(editId) {
+  const name = document.getElementById('role-name').value.trim();
+  if (!name) return alert('请输入角色名称');
+
+  const data = {
+    name,
+    emoji: document.getElementById('role-emoji').value,
+    identity: document.getElementById('role-identity').value.trim(),
+    responsibilities: document.getElementById('role-responsibilities').value.trim().split('\n').filter(Boolean),
+    personality: {
+      tone: document.getElementById('role-tone').value.trim(),
+      style: document.getElementById('role-style').value.trim(),
+      catchphrases: document.getElementById('role-catchphrases').value.split('、').map(s => s.trim()).filter(Boolean)
+    },
+    constraints: document.getElementById('role-constraints').value.trim().split('\n').filter(Boolean),
+    is_template: false
+  };
+
+  let res;
+  if (editId) {
+    res = await api('PUT', `/roles/${editId}`, data);
+  } else {
+    res = await api('POST', '/roles', data);
+  }
+
+  if (res.success) {
+    closeModal();
+    loadRoles();
+  } else {
+    alert(res.error || '操作失败');
+  }
+}
+
+async function deleteRole(roleId) {
+  if (!confirm('确定删除此角色？')) return;
+  const res = await api('DELETE', `/roles/${roleId}`);
+  if (res.success) {
+    closeModal();
+    loadRoles();
+  } else {
+    alert(res.error || '删除失败');
+  }
+}
+
+// ==================== Teams ====================
+async function loadTeams() {
+  const res = await api('GET', '/teams');
+  state.teams = res.data || [];
+  document.getElementById('team-count').textContent = state.teams.length;
+  renderTeams();
+}
+
+function renderTeams() {
+  const container = document.getElementById('teams-content');
+  document.getElementById('header-actions').innerHTML = `
+    <button class="btn btn-primary" onclick="showTeamModal()">+ 新建团队</button>
+  `;
+
+  const templates = state.teams.filter(t => t.is_template);
+  const customs = state.teams.filter(t => !t.is_template);
+
+  let html = '';
+
+  if (templates.length > 0) {
+    html += `<div class="card"><div class="card-header"><div class="card-title">📦 团队模板</div></div>
+    <div class="grid grid-2">${templates.map(t => renderTeamCard(t)).join('')}</div></div>`;
+  }
+
+  if (customs.length > 0) {
+    html += `<div class="card"><div class="card-header"><div class="card-title">👥 自定义团队</div></div>
+    <div class="grid grid-2">${customs.map(t => renderTeamCard(t)).join('')}</div></div>`;
+  }
+
+  if (state.teams.length === 0) {
+    html = `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">还没有团队</div></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function renderTeamCard(team) {
+  const roles = team.roles || [];
+  return `
+    <div class="team-card">
+      <div class="team-card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="team-card-name">${escapeHtml(team.name)}</div>
+        ${team.is_template ? '<span class="tag">模板</span>' : ''}
+      </div>
+      <div class="team-card-desc">${escapeHtml(team.description || '暂无描述')}</div>
+      <div class="team-card-roles">
+        ${roles.map(r => `<span class="team-role-chip">${r.emoji} ${escapeHtml(r.name)}</span>`).join('')}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        ${!team.is_template ? `
+          <button class="btn btn-sm" onclick="event.stopPropagation();showTeamModal('${team.id}')">编辑</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteTeam('${team.id}')">删除</button>
+        ` : `
+          <button class="btn btn-sm" onclick="event.stopPropagation();showTeamModal(null, '${team.id}')">基于模板创建</button>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+async function showTeamModal(editId = null, fromTemplateId = null) {
+  const rolesRes = await api('GET', '/roles');
+  const allRoles = rolesRes.data || [];
+
+  let team = null;
+  if (editId) {
+    const res = await api('GET', `/teams/${editId}`);
+    team = res.data;
+  } else if (fromTemplateId) {
+    const res = await api('GET', `/teams/${fromTemplateId}`);
+    if (res.data) {
+      team = { ...res.data, id: null, name: res.data.name + ' (副本)', is_template: false };
+    }
+  }
+
+  const selectedRoleIds = team?.roles ? team.roles.map(r => r.id) : [];
+  const facilitatorId = team?.facilitator_id || (selectedRoleIds[0] || '');
+
+  const modal = document.getElementById('modal-container');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal" style="max-width:700px;">
+        <div class="modal-header">
+          <div class="modal-title">${editId ? '✏️ 编辑团队' : '👥 新建团队'}</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">团队名称</label>
+            <input class="form-input" id="team-name" value="${team ? escapeAttr(team.name) : ''}" placeholder="如：产品开发组">
+          </div>
+          <div class="form-group">
+            <label class="form-label">最大讨论轮次</label>
+            <input class="form-input" id="team-max-rounds" type="number" min="1" max="10" value="${team?.max_rounds || 3}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">团队描述</label>
+          <textarea class="form-textarea" id="team-description" rows="2" placeholder="描述这个团队的定位...">${team ? escapeHtml(team.description || '') : ''}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">选择角色 <span style="color:var(--text-muted);font-weight:normal;">（点击选择/取消）</span></label>
+          <div class="grid grid-3" id="team-role-selector">
+            ${allRoles.map(r => `
+              <div class="role-card ${selectedRoleIds.includes(r.id) ? 'selected' : ''}" data-role-id="${r.id}" onclick="toggleTeamRole(this, '${r.id}')">
+                <div class="role-card-header">
+                  <div class="role-card-emoji">${r.emoji}</div>
+                  <div class="role-card-name">${escapeHtml(r.name)}</div>
+                </div>
+                <div class="role-card-desc">${escapeHtml(r.identity.slice(0, 50))}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="form-group" id="facilitator-group" style="${selectedRoleIds.length > 0 ? '' : 'display:none'}">
+          <label class="form-label">主持人（协调者）</label>
+          <select class="form-select" id="team-facilitator">
+            ${selectedRoleIds.map(id => {
+              const r = allRoles.find(rr => rr.id === id);
+              return r ? `<option value="${r.id}" ${r.id === facilitatorId ? 'selected' : ''}>${r.emoji} ${escapeHtml(r.name)}</option>` : '';
+            }).join('')}
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" onclick="saveTeam('${editId || ''}')">${editId ? '保存' : '创建'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleTeamRole(el, roleId) {
+  el.classList.toggle('selected');
+  updateFacilitatorOptions();
+}
+
+function updateFacilitatorOptions() {
+  const selected = [...document.querySelectorAll('#team-role-selector .role-card.selected')];
+  const facilitatorGroup = document.getElementById('facilitator-group');
+  const facilitatorSelect = document.getElementById('team-facilitator');
+
+  if (selected.length === 0) {
+    facilitatorGroup.style.display = 'none';
+    return;
+  }
+
+  facilitatorGroup.style.display = 'block';
+  const currentVal = facilitatorSelect.value;
+  facilitatorSelect.innerHTML = selected.map(el => {
+    const id = el.dataset.roleId;
+    const name = el.querySelector('.role-card-name').textContent;
+    const emoji = el.querySelector('.role-card-emoji').textContent;
+    return `<option value="${id}" ${id === currentVal ? 'selected' : ''}>${emoji} ${name}</option>`;
+  }).join('');
+}
+
+async function saveTeam(editId) {
+  const name = document.getElementById('team-name').value.trim();
+  if (!name) return alert('请输入团队名称');
+
+  const selectedRoles = [...document.querySelectorAll('#team-role-selector .role-card.selected')].map(el => el.dataset.roleId);
+  if (selectedRoles.length === 0) return alert('请至少选择一个角色');
+
+  const data = {
+    name,
+    description: document.getElementById('team-description').value.trim(),
+    facilitator_id: document.getElementById('team-facilitator').value,
+    role_ids: selectedRoles,
+    max_rounds: parseInt(document.getElementById('team-max-rounds').value) || 3,
+    is_template: false
+  };
+
+  let res;
+  if (editId) {
+    res = await api('PUT', `/teams/${editId}`, data);
+  } else {
+    res = await api('POST', '/teams', data);
+  }
+
+  if (res.success) {
+    closeModal();
+    loadTeams();
+  } else {
+    alert(res.error || '操作失败');
+  }
+}
+
+async function deleteTeam(teamId) {
+  if (!confirm('确定删除此团队？')) return;
+  const res = await api('DELETE', `/teams/${teamId}`);
+  if (res.success) {
+    loadTeams();
+  } else {
+    alert(res.error || '删除失败');
+  }
+}
+
+// ==================== Utilities ====================
+function closeModal() {
+  document.getElementById('modal-container').innerHTML = '';
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = now - d;
+
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// 显示提示消息
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    max-width: 300px;
+    word-wrap: break-word;
+  `;
+  
+  // 根据类型设置颜色
+  const colors = {
+    success: '#22c55e',
+    error: '#ef4444',
+    warning: '#eab308',
+    info: '#3b82f6'
+  };
+  toast.style.background = colors[type] || colors.info;
+  toast.textContent = message;
+  
+  // 添加动画样式
+  if (!document.getElementById('toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'toast-styles';
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(toast);
+  
+  // 3秒后自动移除
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function getMsgTypeLabel(type) {
+  const labels = { proposal: '方案', opinion: '意见', question: '提问', review: '审查', tool_call: '工具调用' };
+  return labels[type] || type;
+}
+
+function formatContent(text) {
+  if (!text) return '';
+  // Simple markdown-like formatting
+  let html = escapeHtml(text);
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Headers
+  html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+  // Lists
+  html = html.replace(/^- (.*$)/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  html = html.replace(/^\d+\. (.*$)/gm, '<li>$1</li>');
+  // Code blocks
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  // Clean up
+  html = html.replace(/<br><(h[1-3]|ul|ol|pre|li)/g, '<$1');
+  html = html.replace(/<\/(h[1-3]|ul|ol|pre|li)><br>/g, '</$1>');
+  return html;
+}
+
+// ==================== Init ====================
+async function init() {
+  connectWS();
+
+  // Load initial data
+  const [rolesRes, teamsRes] = await Promise.all([
+    api('GET', '/roles'),
+    api('GET', '/teams')
+  ]);
+
+  state.roles = rolesRes.data || [];
+  state.teams = teamsRes.data || [];
+
+  document.getElementById('role-count').textContent = state.roles.length;
+  document.getElementById('team-count').textContent = state.teams.length;
+
+  loadTasks();
+}
+
+init();
+</script>
+</body>
+</html>
